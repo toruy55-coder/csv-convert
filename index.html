@@ -1,0 +1,2498 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV結合・変換ツール</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+        }
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+        .tab {
+            flex: 1;
+            padding: 15px 20px;
+            text-align: center;
+            cursor: pointer;
+            background: transparent;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            color: #495057;
+            transition: all 0.3s;
+        }
+        .tab:hover {
+            background: #e9ecef;
+        }
+        .tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #212529;
+            display: flex;
+            align-items: center;
+        }
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: #667eea;
+            margin-right: 10px;
+            border-radius: 2px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #495057;
+            font-size: 14px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: block;
+            width: 100%;
+        }
+        .file-drop-zone {
+            border: 2px dashed #ced4da;
+            border-radius: 4px;
+            padding: 20px;
+            text-align: center;
+            background: #f8f9fa;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .file-drop-zone:hover {
+            border-color: #667eea;
+            background: #e9ecef;
+        }
+        .file-drop-zone.drag-over {
+            border-color: #667eea;
+            background: #e7e9ff;
+            border-style: solid;
+        }
+        .file-input-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.3s;
+            margin-bottom: 10px;
+        }
+        .file-input-button:hover {
+            background: #5568d3;
+        }
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+        .file-name {
+            display: block;
+            color: #6c757d;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .file-drop-hint {
+            font-size: 13px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #218838;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            margin-top: 10px;
+            overflow: auto;
+        }
+        .preview-table th,
+        .preview-table td {
+            border: 1px solid #dee2e6;
+            padding: 8px 12px;
+            text-align: left;
+        }
+        .preview-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+        .preview-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        .column-list {
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .column-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            cursor: move;
+            transition: background 0.2s;
+        }
+        .column-item:last-child {
+            border-bottom: none;
+        }
+        .column-item:hover {
+            background: #f8f9fa;
+        }
+        .column-item.dragging {
+            opacity: 0.5;
+            background: #e9ecef;
+        }
+        .column-item.drag-over {
+            border-top: 3px solid #667eea;
+        }
+        .column-checkbox {
+            margin-right: 12px;
+            cursor: pointer;
+        }
+        .column-source {
+            background: #e9ecef;
+            color: #495057;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            margin-right: 10px;
+            font-weight: 600;
+        }
+        .column-name {
+            flex: 1;
+            font-size: 14px;
+            color: #212529;
+        }
+        .column-rename {
+            flex: 1;
+            padding: 4px 8px;
+            border: 1px solid #ced4da;
+            border-radius: 3px;
+            font-size: 13px;
+        }
+        .drag-handle {
+            margin-right: 10px;
+            color: #adb5bd;
+            cursor: move;
+        }
+        .rule-list {
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+        }
+        .rule-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .rule-item:last-child {
+            border-bottom: none;
+        }
+        .rule-item input,
+        .rule-item select {
+            flex: 1;
+            padding: 6px 10px;
+            border: 1px solid #ced4da;
+            border-radius: 3px;
+            font-size: 13px;
+        }
+        .validation-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+        }
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 8px;
+        }
+        .checkbox-group label {
+            font-size: 14px;
+            color: #495057;
+            cursor: pointer;
+        }
+        .settings-list {
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .settings-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .settings-item:last-child {
+            border-bottom: none;
+        }
+        .settings-name {
+            flex: 1;
+            font-size: 14px;
+            color: #212529;
+            cursor: pointer;
+        }
+        .settings-name:hover {
+            color: #667eea;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .alert {
+            padding: 15px 20px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .alert-warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+        }
+        .alert-success {
+            background: #d4edda;
+            border: 1px solid #28a745;
+            color: #155724;
+        }
+        .alert-danger {
+            background: #f8d7da;
+            border: 1px solid #dc3545;
+            color: #721c24;
+        }
+        .alert-info {
+            background: #d1ecf1;
+            border: 1px solid #17a2b8;
+            color: #0c5460;
+        }
+        .result-summary {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .result-summary-item {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .result-summary-item strong {
+            color: #495057;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.show {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #212529;
+        }
+        .modal-body {
+            margin-bottom: 20px;
+        }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 768px) {
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+        }
+        .log-item {
+            padding: 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+        }
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        .log-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: #212529;
+        }
+        .log-date {
+            font-size: 12px;
+            color: #6c757d;
+        }
+        .log-details {
+            display: none;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #dee2e6;
+            font-size: 13px;
+        }
+        .log-details.show {
+            display: block;
+        }
+        .log-detail-item {
+            margin-bottom: 5px;
+        }
+        .warning-badge {
+            background: #ffc107;
+            color: #856404;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        .summary-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+        .summary-item {
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        .mismatch-warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 5px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 CSV結合・変換ツール</h1>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="define">定義モード</button>
+            <button class="tab" data-tab="execute">実行モード</button>
+            <button class="tab" data-tab="oneclick">ワンクリック実行モード</button>
+            <button class="tab" data-tab="format">列整形モード</button>
+            <button class="tab" data-tab="log">実行ログ</button>
+        </div>
+
+        <!-- 定義モード -->
+        <div id="define-tab" class="tab-content active">
+            <div class="section">
+                <div class="section-title">ファイルアップロード</div>
+                <button class="btn btn-secondary btn-sm" id="define-new" style="margin-bottom: 15px;">🆕 新規作成</button>
+                <div class="two-column">
+                    <div class="form-group">
+                        <label class="form-label">CSV A</label>
+                        <div class="file-input-wrapper">
+                            <div class="file-drop-zone" id="define-drop-zone-a">
+                                <label class="file-input-button">
+                                    📁 ファイルを選択
+                                    <input type="file" id="define-file-a" accept=".csv">
+                                </label>
+                                <div class="file-drop-hint">またはここにファイルをドラッグ&ドロップ</div>
+                                <span class="file-name" id="define-file-a-name">未選択</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">CSV B</label>
+                        <div class="file-input-wrapper">
+                            <div class="file-drop-zone" id="define-drop-zone-b">
+                                <label class="file-input-button">
+                                    📁 ファイルを選択
+                                    <input type="file" id="define-file-b" accept=".csv">
+                                </label>
+                                <div class="file-drop-hint">またはここにファイルをドラッグ&ドロップ</div>
+                                <span class="file-name" id="define-file-b-name">未選択</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="define-preview-section" style="display: none;">
+                <div class="section">
+                    <div class="section-title">プレビュー（先頭4行）</div>
+                    <div class="two-column">
+                        <div>
+                            <strong>CSV A</strong>
+                            <div id="define-preview-a"></div>
+                        </div>
+                        <div>
+                            <strong>CSV B</strong>
+                            <div id="define-preview-b"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">結合設定</div>
+                    <div class="two-column">
+                        <div class="form-group">
+                            <label class="form-label">A側の結合キー</label>
+                            <select id="define-key-a" class="form-control"></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">B側の結合キー</label>
+                            <select id="define-key-b" class="form-control"></select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">結合方法</label>
+                        <select id="define-join-type" class="form-control">
+                            <option value="inner">両方に一致する行だけ出力</option>
+                            <option value="left">Aを基準にBを補完</option>
+                            <option value="right">Bを基準にAを補完</option>
+                            <option value="outer">すべての行を出力（全結合）</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">出力カラム設定</div>
+                    <div id="define-columns" class="column-list"></div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">フォーマット変換ルール</div>
+                    <div id="define-rules" class="rule-list"></div>
+                    <button class="btn btn-secondary btn-sm" id="define-add-rule" style="margin-top: 10px;">+ ルールを追加</button>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">データ検証設定</div>
+                    <div class="validation-options">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="define-check-blank" checked>
+                            <label for="define-check-blank">空白キーチェック</label>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="define-check-duplicate">
+                            <label for="define-check-duplicate">重複キーチェック</label>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="define-check-column-count">
+                            <label for="define-check-column-count">カラム数不一致チェック</label>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="define-remove-duplicates">
+                            <label for="define-remove-duplicates">重複行除去</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">設定の保存</div>
+                    <div class="form-group">
+                        <label class="form-label">設定名</label>
+                        <input type="text" id="define-setting-name" class="form-control" placeholder="設定名を入力">
+                    </div>
+                    <div class="checkbox-group" style="margin-bottom: 15px;">
+                        <input type="checkbox" id="define-save-csv-data">
+                        <label for="define-save-csv-data">CSVデータも保存（ワンクリック実行で再利用可能）</label>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn btn-success" id="define-save-setting">設定を保存</button>
+                        <button class="btn btn-primary" id="define-test-run">テスト実行</button>
+                        <button class="btn btn-secondary" id="define-export-setting">設定をエクスポート</button>
+                        <button class="btn btn-secondary" id="define-import-setting">設定をインポート</button>
+                        <input type="file" id="define-import-file" accept=".json" style="display: none;">
+                    </div>
+                </div>
+
+                <div id="define-test-result-section" style="display: none;">
+                    <div class="section">
+                        <div class="section-title">テスト実行結果</div>
+                        <div id="define-test-result-summary" class="result-summary"></div>
+                        <div id="define-test-result-preview"></div>
+                        <button class="btn btn-success" id="define-test-download" style="margin-top: 15px;">CSVをダウンロード</button>
+                    </div>
+                </div>
+
+                <div class="section" id="define-saved-settings-section" style="display: none;">
+                    <div class="section-title">保存済み設定</div>
+                    <div id="define-saved-settings" class="settings-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 実行モード -->
+        <div id="execute-tab" class="tab-content">
+            <div class="section">
+                <div class="section-title">設定の選択</div>
+                <div class="form-group">
+                    <label class="form-label">保存済み設定</label>
+                    <select id="execute-setting" class="form-control">
+                        <option value="">設定を選択してください</option>
+                    </select>
+                </div>
+                <div id="execute-summary" class="summary-box" style="display: none;"></div>
+            </div>
+
+            <div id="execute-file-section" style="display: none;">
+                <div class="section">
+                    <div class="section-title">ファイルアップロード</div>
+                    <div class="two-column">
+                        <div class="form-group">
+                            <label class="form-label">CSV A</label>
+                            <div class="file-input-wrapper">
+                                <div class="file-drop-zone" id="execute-drop-zone-a">
+                                    <label class="file-input-button">
+                                        📁 ファイルを選択
+                                        <input type="file" id="execute-file-a" accept=".csv">
+                                    </label>
+                                    <div class="file-drop-hint">またはここにファイルをドラッグ&ドロップ</div>
+                                    <span class="file-name" id="execute-file-a-name">未選択</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">CSV B</label>
+                            <div class="file-input-wrapper">
+                                <div class="file-drop-zone" id="execute-drop-zone-b">
+                                    <label class="file-input-button">
+                                        📁 ファイルを選択
+                                        <input type="file" id="execute-file-b" accept=".csv">
+                                    </label>
+                                    <div class="file-drop-hint">またはここにファイルをドラッグ&ドロップ</div>
+                                    <span class="file-name" id="execute-file-b-name">未選択</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" id="execute-run">▶ 変換を実行</button>
+                </div>
+
+                <div id="execute-result-section" style="display: none;">
+                    <div class="section">
+                        <div class="section-title">実行結果</div>
+                        <div id="execute-result-summary" class="result-summary"></div>
+                        <div id="execute-result-preview"></div>
+                        <button class="btn btn-success" id="execute-download" style="margin-top: 15px;">CSVをダウンロード</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ワンクリック実行モード -->
+        <div id="oneclick-tab" class="tab-content">
+            <div id="oneclick-no-data" class="section" style="display: none;">
+                <div class="alert alert-info">
+                    ℹ️ ワンクリック実行モードを使用するには、まず「実行モード」でCSV結合を実行してください。<br>
+                    直前に実行した操作を保持し、ワンクリックで同じ処理を再実行できます。
+                </div>
+                <button class="btn btn-primary" onclick="document.querySelector('[data-tab=execute]').click()">実行モードへ移動</button>
+            </div>
+
+            <div id="oneclick-with-data" class="section" style="display: none;">
+                <div class="section-title">直前の実行情報</div>
+                <div id="oneclick-info" class="summary-box"></div>
+                <button class="btn btn-primary btn-lg" id="oneclick-run" style="font-size: 18px; padding: 15px 40px; margin-top: 20px;">⚡ ワンクリック再実行</button>
+                <p style="margin-top: 15px; color: #6c757d; font-size: 14px;">
+                    同じ設定とファイルで、即座に変換を実行します。
+                </p>
+            </div>
+        </div>
+
+        <!-- 列整形モード -->
+        <div id="format-tab" class="tab-content">
+            <div class="section">
+                <div class="section-title">ファイルアップロード</div>
+                <div class="form-group">
+                    <label class="form-label">CSVファイル</label>
+                    <div class="file-input-wrapper">
+                        <div class="file-drop-zone" id="format-drop-zone">
+                            <label class="file-input-button">
+                                📁 ファイルを選択
+                                <input type="file" id="format-file" accept=".csv">
+                            </label>
+                            <div class="file-drop-hint">またはここにファイルをドラッグ&ドロップ</div>
+                            <span class="file-name" id="format-file-name">未選択</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="format-columns-section" style="display: none;">
+                <div class="section">
+                    <div class="section-title">列設定</div>
+                    <div id="format-columns" class="column-list"></div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">整形設定の保存</div>
+                    <div class="form-group">
+                        <label class="form-label">設定名</label>
+                        <input type="text" id="format-setting-name" class="form-control" placeholder="設定名を入力">
+                    </div>
+                    <div class="button-group">
+                        <button class="btn btn-success" id="format-save-setting">設定を保存</button>
+                        <button class="btn btn-secondary" id="format-export-setting">設定をエクスポート</button>
+                        <button class="btn btn-secondary" id="format-import-setting">設定をインポート</button>
+                        <input type="file" id="format-import-file" accept=".json" style="display: none;">
+                        <button class="btn btn-primary" id="format-run">整形して出力</button>
+                    </div>
+                </div>
+
+                <div class="section" id="format-saved-settings-section" style="display: none;">
+                    <div class="section-title">保存済み設定</div>
+                    <div id="format-saved-settings" class="settings-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 実行ログ -->
+        <div id="log-tab" class="tab-content">
+            <div class="section">
+                <div class="section-title">実行履歴</div>
+                <button class="btn btn-danger btn-sm" id="log-clear-all" style="margin-bottom: 15px;">全削除</button>
+                <div id="log-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 警告モーダル -->
+    <div id="warning-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">⚠️ 警告</div>
+            <div class="modal-body" id="warning-modal-body"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="warning-cancel">キャンセル</button>
+                <button class="btn btn-primary" id="warning-proceed">このまま実行</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // グローバル変数
+        let csvDataA = null;
+        let csvDataB = null;
+        let currentColumns = [];
+        let conversionRules = [];
+        let resultCsvData = null;
+        let formatCsvData = null;
+        let formatColumns = [];
+        let currentDefineFileNames = { a: '', b: '' };
+
+        // 実行モード用のファイル保持
+        let executeFileA = null;
+        let executeFileB = null;
+
+        // ワンクリック実行モード用の最後の実行情報
+        let lastExecutionData = null;
+
+        // ユーティリティ関数
+        function parseCSV(text) {
+            const lines = text.split('\n').filter(line => line.trim());
+            const result = [];
+
+            for (let line of lines) {
+                const row = [];
+                let current = '';
+                let inQuotes = false;
+
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    const next = line[i + 1];
+
+                    if (char === '"') {
+                        if (inQuotes && next === '"') {
+                            current += '"';
+                            i++;
+                        } else {
+                            inQuotes = !inQuotes;
+                        }
+                    } else if (char === ',' && !inQuotes) {
+                        row.push(current);
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                row.push(current);
+                result.push(row);
+            }
+
+            return result;
+        }
+
+        function csvToString(data) {
+            return data.map(row => {
+                return row.map(cell => {
+                    const str = String(cell || '');
+                    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                        return '"' + str.replace(/"/g, '""') + '"';
+                    }
+                    return str;
+                }).join(',');
+            }).join('\n');
+        }
+
+        function encodeCSVData(csvData) {
+            const csvString = csvToString(csvData);
+            return btoa(unescape(encodeURIComponent(csvString)));
+        }
+
+        function decodeCSVData(base64String) {
+            const csvString = decodeURIComponent(escape(atob(base64String)));
+            return parseCSV(csvString);
+        }
+
+        function getCSVDataSize(csvData) {
+            const csvString = csvToString(csvData);
+            return new Blob([csvString]).size;
+        }
+
+        function downloadCSV(data, filename) {
+            const csvString = csvToString(data);
+            const bom = '\uFEFF';
+            const blob = new Blob([bom + csvString], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+        }
+
+        function formatDateTime(date) {
+            const pad = (n) => String(n).padStart(2, '0');
+            return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}`;
+        }
+
+        function readFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = reject;
+                reader.readAsText(file);
+            });
+        }
+
+        // タブ切り替え
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.dataset.tab;
+
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+                tab.classList.add('active');
+                document.getElementById(`${tabName}-tab`).classList.add('active');
+
+                if (tabName === 'execute') {
+                    loadSettingsDropdown(tabName);
+                } else if (tabName === 'oneclick') {
+                    loadOneclickMode();
+                } else if (tabName === 'log') {
+                    loadExecutionLog();
+                } else if (tabName === 'define') {
+                    loadSavedSettings();
+                } else if (tabName === 'format') {
+                    loadFormatSettings();
+                }
+            });
+        });
+
+        // ドラッグ&ドロップ機能の汎用セットアップ
+        function setupFileDrop(dropZoneId, fileInputId, fileNameId, onFileLoaded) {
+            const dropZone = document.getElementById(dropZoneId);
+            const fileInput = document.getElementById(fileInputId);
+
+            if (!dropZone || !fileInput) return;
+
+            // ドロップゾーンのクリックでファイル選択
+            dropZone.addEventListener('click', (e) => {
+                if (e.target === fileInput || fileInput.contains(e.target)) return;
+                fileInput.click();
+            });
+
+            // ドラッグオーバー
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.add('drag-over');
+            });
+
+            // ドラッグリーブ
+            dropZone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.remove('drag-over');
+            });
+
+            // ドロップ
+            dropZone.addEventListener('drop', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.remove('drag-over');
+
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    const file = files[0];
+                    if (file.name.endsWith('.csv')) {
+                        document.getElementById(fileNameId).textContent = file.name;
+                        const text = await readFile(file);
+                        onFileLoaded(file, text);
+                    } else {
+                        alert('CSVファイルを選択してください');
+                    }
+                }
+            });
+        }
+
+        // 定義モード: 新規作成
+        document.getElementById('define-new').addEventListener('click', () => {
+            if (csvDataA || csvDataB) {
+                if (!confirm('現在の定義内容をクリアして新規作成しますか？')) {
+                    return;
+                }
+            }
+
+            // データのクリア
+            csvDataA = null;
+            csvDataB = null;
+            currentDefineFileNames = { a: '', b: '' };
+            currentColumns = [];
+            conversionRules = [];
+
+            // ファイル入力のリセット
+            document.getElementById('define-file-a').value = '';
+            document.getElementById('define-file-b').value = '';
+            document.getElementById('define-file-a-name').textContent = '未選択';
+            document.getElementById('define-file-b-name').textContent = '未選択';
+
+            // プレビューセクションを非表示
+            document.getElementById('define-preview-section').style.display = 'none';
+
+            // 設定名をクリア
+            document.getElementById('define-setting-name').value = '';
+
+            // チェックボックスをデフォルトに
+            document.getElementById('define-check-blank').checked = true;
+            document.getElementById('define-check-duplicate').checked = false;
+            document.getElementById('define-check-column-count').checked = false;
+            document.getElementById('define-remove-duplicates').checked = false;
+
+            alert('定義モードをリセットしました。新しい定義を作成できます。');
+        });
+
+        // 定義モード: ファイルアップロード
+        document.getElementById('define-file-a').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                currentDefineFileNames.a = file.name;
+                document.getElementById('define-file-a-name').textContent = file.name;
+                const text = await readFile(file);
+                csvDataA = parseCSV(text);
+                updateDefinePreview();
+            }
+        });
+
+        document.getElementById('define-file-b').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                currentDefineFileNames.b = file.name;
+                document.getElementById('define-file-b-name').textContent = file.name;
+                const text = await readFile(file);
+                csvDataB = parseCSV(text);
+                updateDefinePreview();
+            }
+        });
+
+        // 定義モード: ドラッグ&ドロップセットアップ
+        setupFileDrop('define-drop-zone-a', 'define-file-a', 'define-file-a-name', (file, text) => {
+            currentDefineFileNames.a = file.name;
+            csvDataA = parseCSV(text);
+            updateDefinePreview();
+        });
+
+        setupFileDrop('define-drop-zone-b', 'define-file-b', 'define-file-b-name', (file, text) => {
+            currentDefineFileNames.b = file.name;
+            csvDataB = parseCSV(text);
+            updateDefinePreview();
+        });
+
+        function updateDefinePreview() {
+            if (!csvDataA || !csvDataB) return;
+
+            document.getElementById('define-preview-section').style.display = 'block';
+
+            // プレビュー表示
+            document.getElementById('define-preview-a').innerHTML = createPreviewTable(csvDataA.slice(0, 5));
+            document.getElementById('define-preview-b').innerHTML = createPreviewTable(csvDataB.slice(0, 5));
+
+            // 結合キー選択肢の設定
+            const keySelectA = document.getElementById('define-key-a');
+            const keySelectB = document.getElementById('define-key-b');
+
+            keySelectA.innerHTML = csvDataA[0].map((col, i) => `<option value="${i}">${col}</option>`).join('');
+            keySelectB.innerHTML = csvDataB[0].map((col, i) => `<option value="${i}">${col}</option>`).join('');
+
+            // カラム一覧の更新
+            updateColumnList();
+        }
+
+        function createPreviewTable(data) {
+            if (!data || data.length === 0) return '';
+
+            let html = '<table class="preview-table"><thead><tr>';
+            data[0].forEach(header => {
+                html += `<th>${header}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+
+            for (let i = 1; i < data.length; i++) {
+                html += '<tr>';
+                data[i].forEach(cell => {
+                    html += `<td>${cell || ''}</td>`;
+                });
+                html += '</tr>';
+            }
+
+            html += '</tbody></table>';
+            return html;
+        }
+
+        function updateColumnList() {
+            if (!csvDataA || !csvDataB) return;
+
+            const headersA = csvDataA[0];
+            const headersB = csvDataB[0];
+
+            currentColumns = [
+                ...headersA.map((name, index) => ({ source: 'A', original: name, name, index, selected: true })),
+                ...headersB.map((name, index) => ({ source: 'B', original: name, name, index, selected: true }))
+            ];
+
+            renderColumnList();
+        }
+
+        function renderColumnList() {
+            const container = document.getElementById('define-columns');
+            container.innerHTML = '';
+
+            currentColumns.forEach((col, idx) => {
+                const div = document.createElement('div');
+                div.className = 'column-item';
+                div.draggable = true;
+                div.dataset.index = idx;
+
+                div.innerHTML = `
+                    <span class="drag-handle">☰</span>
+                    <input type="checkbox" class="column-checkbox" ${col.selected ? 'checked' : ''}>
+                    <span class="column-source">${col.source}</span>
+                    <span class="column-name">${col.original}</span>
+                    <input type="text" class="column-rename" value="${col.name}" placeholder="リネーム">
+                `;
+
+                // チェックボックス
+                div.querySelector('.column-checkbox').addEventListener('change', (e) => {
+                    currentColumns[idx].selected = e.target.checked;
+                });
+
+                // リネーム
+                div.querySelector('.column-rename').addEventListener('input', (e) => {
+                    currentColumns[idx].name = e.target.value || col.original;
+                });
+
+                // ドラッグ&ドロップ
+                div.addEventListener('dragstart', handleDragStart);
+                div.addEventListener('dragover', handleDragOver);
+                div.addEventListener('drop', handleDrop);
+                div.addEventListener('dragend', handleDragEnd);
+
+                container.appendChild(div);
+            });
+        }
+
+        let draggedElement = null;
+
+        function handleDragStart(e) {
+            draggedElement = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+
+            const items = Array.from(document.querySelectorAll('.column-item'));
+            items.forEach(item => item.classList.remove('drag-over'));
+
+            if (this !== draggedElement) {
+                this.classList.add('drag-over');
+            }
+
+            return false;
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+
+            if (draggedElement !== this) {
+                const fromIndex = parseInt(draggedElement.dataset.index);
+                const toIndex = parseInt(this.dataset.index);
+
+                const item = currentColumns.splice(fromIndex, 1)[0];
+                currentColumns.splice(toIndex, 0, item);
+
+                renderColumnList();
+            }
+
+            return false;
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            document.querySelectorAll('.column-item').forEach(item => {
+                item.classList.remove('drag-over');
+            });
+        }
+
+        // 変換ルール
+        document.getElementById('define-add-rule').addEventListener('click', () => {
+            conversionRules.push({ column: '', from: '', to: '' });
+            renderRuleList();
+        });
+
+        function renderRuleList() {
+            const container = document.getElementById('define-rules');
+            container.innerHTML = '';
+
+            conversionRules.forEach((rule, idx) => {
+                const div = document.createElement('div');
+                div.className = 'rule-item';
+
+                const columnOptions = currentColumns
+                    .filter(col => col.selected)
+                    .map(col => `<option value="${col.name}" ${rule.column === col.name ? 'selected' : ''}>${col.name}</option>`)
+                    .join('');
+
+                div.innerHTML = `
+                    <select class="rule-column">
+                        <option value="">カラムを選択</option>
+                        ${columnOptions}
+                    </select>
+                    <input type="text" class="rule-from" value="${rule.from}" placeholder="変換前">
+                    <input type="text" class="rule-to" value="${rule.to}" placeholder="変換後">
+                    <button class="btn btn-danger btn-sm rule-delete">削除</button>
+                `;
+
+                div.querySelector('.rule-column').addEventListener('change', (e) => {
+                    conversionRules[idx].column = e.target.value;
+                });
+
+                div.querySelector('.rule-from').addEventListener('input', (e) => {
+                    conversionRules[idx].from = e.target.value;
+                });
+
+                div.querySelector('.rule-to').addEventListener('input', (e) => {
+                    conversionRules[idx].to = e.target.value;
+                });
+
+                div.querySelector('.rule-delete').addEventListener('click', () => {
+                    conversionRules.splice(idx, 1);
+                    renderRuleList();
+                });
+
+                container.appendChild(div);
+            });
+        }
+
+        // 設定の保存
+        document.getElementById('define-save-setting').addEventListener('click', () => {
+            const name = document.getElementById('define-setting-name').value.trim();
+            if (!name) {
+                alert('設定名を入力してください');
+                return;
+            }
+
+            const saveCsvData = document.getElementById('define-save-csv-data').checked;
+
+            // CSVデータのサイズチェック
+            if (saveCsvData && csvDataA && csvDataB) {
+                const sizeA = getCSVDataSize(csvDataA);
+                const sizeB = getCSVDataSize(csvDataB);
+                const totalSize = sizeA + sizeB;
+
+                if (totalSize > 100 * 1024) { // 100KB
+                    const sizeKB = Math.round(totalSize / 1024);
+                    if (!confirm(`警告: CSVデータのサイズが ${sizeKB}KB と大きいため、ブラウザのストレージ容量を圧迫する可能性があります。\n\nそれでも保存しますか？`)) {
+                        return;
+                    }
+                }
+            }
+
+            const setting = {
+                name,
+                fileNameA: currentDefineFileNames.a,
+                fileNameB: currentDefineFileNames.b,
+                keyA: document.getElementById('define-key-a').value,
+                keyB: document.getElementById('define-key-b').value,
+                joinType: document.getElementById('define-join-type').value,
+                columns: currentColumns,
+                rules: conversionRules,
+                validation: {
+                    checkBlank: document.getElementById('define-check-blank').checked,
+                    checkDuplicate: document.getElementById('define-check-duplicate').checked,
+                    checkColumnCount: document.getElementById('define-check-column-count').checked,
+                    removeDuplicates: document.getElementById('define-remove-duplicates').checked
+                },
+                csvDataA: (saveCsvData && csvDataA) ? encodeCSVData(csvDataA) : null,
+                csvDataB: (saveCsvData && csvDataB) ? encodeCSVData(csvDataB) : null
+            };
+
+            const settings = JSON.parse(localStorage.getItem('csvSettings') || '[]');
+            const existingIndex = settings.findIndex(s => s.name === name);
+
+            if (existingIndex >= 0) {
+                if (!confirm('同名の設定が存在します。上書きしますか？')) return;
+                settings[existingIndex] = setting;
+            } else {
+                settings.push(setting);
+            }
+
+            localStorage.setItem('csvSettings', JSON.stringify(settings));
+            alert('設定を保存しました');
+            loadSavedSettings();
+        });
+
+        function loadSavedSettings() {
+            const settings = JSON.parse(localStorage.getItem('csvSettings') || '[]');
+            const container = document.getElementById('define-saved-settings');
+
+            if (settings.length === 0) {
+                document.getElementById('define-saved-settings-section').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('define-saved-settings-section').style.display = 'block';
+            container.innerHTML = '';
+
+            settings.forEach((setting, idx) => {
+                const div = document.createElement('div');
+                div.className = 'settings-item';
+
+                div.innerHTML = `
+                    <span class="settings-name">${setting.name}</span>
+                    <div class="button-group">
+                        <button class="btn btn-primary btn-sm settings-load">読込</button>
+                        <button class="btn btn-danger btn-sm settings-delete">削除</button>
+                    </div>
+                `;
+
+                div.querySelector('.settings-load').addEventListener('click', () => {
+                    loadSetting(setting);
+                });
+
+                div.querySelector('.settings-delete').addEventListener('click', () => {
+                    if (confirm(`設定「${setting.name}」を削除しますか？`)) {
+                        settings.splice(idx, 1);
+                        localStorage.setItem('csvSettings', JSON.stringify(settings));
+                        loadSavedSettings();
+                    }
+                });
+
+                container.appendChild(div);
+            });
+        }
+
+        function loadSetting(setting) {
+            // ファイル名の復元
+            currentDefineFileNames = { a: setting.fileNameA || '', b: setting.fileNameB || '' };
+
+            // 保存されたCSVデータがある場合は復元
+            if (setting.csvDataA && setting.csvDataB) {
+                try {
+                    csvDataA = decodeCSVData(setting.csvDataA);
+                    csvDataB = decodeCSVData(setting.csvDataB);
+
+                    document.getElementById('define-file-a-name').textContent = setting.fileNameA || '保存されたデータ';
+                    document.getElementById('define-file-b-name').textContent = setting.fileNameB || '保存されたデータ';
+
+                    updateDefinePreview();
+                } catch (err) {
+                    alert('保存されたCSVデータの復元に失敗しました');
+                    console.error(err);
+                    return;
+                }
+            }
+
+            // UIへの反映はファイルがアップロードされている場合のみ
+            if (csvDataA && csvDataB) {
+                document.getElementById('define-key-a').value = setting.keyA;
+                document.getElementById('define-key-b').value = setting.keyB;
+                document.getElementById('define-join-type').value = setting.joinType;
+                currentColumns = setting.columns;
+                conversionRules = setting.rules;
+
+                document.getElementById('define-check-blank').checked = setting.validation.checkBlank;
+                document.getElementById('define-check-duplicate').checked = setting.validation.checkDuplicate;
+                document.getElementById('define-check-column-count').checked = setting.validation.checkColumnCount;
+                document.getElementById('define-remove-duplicates').checked = setting.validation.removeDuplicates;
+
+                renderColumnList();
+                renderRuleList();
+
+                alert('設定を読み込みました');
+            } else {
+                alert('設定を読み込むには、まずCSVファイルをアップロードしてください');
+            }
+        }
+
+        // エクスポート・インポート
+        document.getElementById('define-export-setting').addEventListener('click', () => {
+            const name = document.getElementById('define-setting-name').value.trim();
+            if (!name) {
+                alert('設定名を入力してください');
+                return;
+            }
+
+            const setting = {
+                name,
+                fileNameA: currentDefineFileNames.a,
+                fileNameB: currentDefineFileNames.b,
+                keyA: document.getElementById('define-key-a').value,
+                keyB: document.getElementById('define-key-b').value,
+                joinType: document.getElementById('define-join-type').value,
+                columns: currentColumns,
+                rules: conversionRules,
+                validation: {
+                    checkBlank: document.getElementById('define-check-blank').checked,
+                    checkDuplicate: document.getElementById('define-check-duplicate').checked,
+                    checkColumnCount: document.getElementById('define-check-column-count').checked,
+                    removeDuplicates: document.getElementById('define-remove-duplicates').checked
+                }
+            };
+
+            const json = JSON.stringify(setting, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${name}.json`;
+            link.click();
+        });
+
+        document.getElementById('define-import-setting').addEventListener('click', () => {
+            document.getElementById('define-import-file').click();
+        });
+
+        document.getElementById('define-import-file').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            try {
+                const text = await readFile(file);
+                const setting = JSON.parse(text);
+
+                const settings = JSON.parse(localStorage.getItem('csvSettings') || '[]');
+                const existingIndex = settings.findIndex(s => s.name === setting.name);
+
+                if (existingIndex >= 0) {
+                    if (!confirm('同名の設定が存在します。上書きしますか？')) return;
+                    settings[existingIndex] = setting;
+                } else {
+                    settings.push(setting);
+                }
+
+                localStorage.setItem('csvSettings', JSON.stringify(settings));
+                alert('設定をインポートしました');
+                loadSavedSettings();
+            } catch (err) {
+                alert('設定ファイルの読み込みに失敗しました');
+            }
+
+            e.target.value = '';
+        });
+
+        // 定義モードのテスト実行
+        document.getElementById('define-test-run').addEventListener('click', () => {
+            if (!csvDataA || !csvDataB) {
+                alert('CSVファイルをアップロードしてください');
+                return;
+            }
+
+            const setting = {
+                name: 'テスト実行',
+                fileNameA: currentDefineFileNames.a,
+                fileNameB: currentDefineFileNames.b,
+                keyA: document.getElementById('define-key-a').value,
+                keyB: document.getElementById('define-key-b').value,
+                joinType: document.getElementById('define-join-type').value,
+                columns: currentColumns,
+                rules: conversionRules,
+                validation: {
+                    checkBlank: document.getElementById('define-check-blank').checked,
+                    checkDuplicate: document.getElementById('define-check-duplicate').checked,
+                    checkColumnCount: document.getElementById('define-check-column-count').checked,
+                    removeDuplicates: document.getElementById('define-remove-duplicates').checked
+                }
+            };
+
+            performDefineTestRun(csvDataA, csvDataB, setting);
+        });
+
+        function performDefineTestRun(dataA, dataB, setting) {
+            const warnings = validateData(dataA, dataB, setting);
+
+            if (warnings.length > 0) {
+                showWarningModal(warnings, () => {
+                    executeDefineTestRun(dataA, dataB, setting);
+                });
+            } else {
+                executeDefineTestRun(dataA, dataB, setting);
+            }
+        }
+
+        function executeDefineTestRun(dataA, dataB, setting) {
+            const headersA = dataA[0];
+            const headersB = dataB[0];
+            const keyA = parseInt(setting.keyA);
+            const keyB = parseInt(setting.keyB);
+            const joinType = setting.joinType;
+
+            // データをマップに変換
+            const mapB = new Map();
+            for (let i = 1; i < dataB.length; i++) {
+                const key = dataB[i][keyB];
+                if (!mapB.has(key)) {
+                    mapB.set(key, []);
+                }
+                mapB.get(key).push(dataB[i]);
+            }
+
+            const result = [];
+            const matchedKeysB = new Set();
+
+            // 出力ヘッダー
+            const outputHeaders = setting.columns
+                .filter(col => col.selected)
+                .map(col => col.name);
+            result.push(outputHeaders);
+
+            // Inner/Left/Outer Join
+            if (joinType === 'inner' || joinType === 'left' || joinType === 'outer') {
+                for (let i = 1; i < dataA.length; i++) {
+                    const rowA = dataA[i];
+                    const key = rowA[keyA];
+                    const rowsB = mapB.get(key) || [];
+
+                    if (rowsB.length > 0) {
+                        rowsB.forEach(rowB => {
+                            const outputRow = setting.columns
+                                .filter(col => col.selected)
+                                .map(col => {
+                                    if (col.source === 'A') {
+                                        return rowA[col.index] || '';
+                                    } else {
+                                        return rowB[col.index] || '';
+                                    }
+                                });
+                            result.push(outputRow);
+                        });
+                        matchedKeysB.add(key);
+                    } else if (joinType === 'left' || joinType === 'outer') {
+                        const outputRow = setting.columns
+                            .filter(col => col.selected)
+                            .map(col => {
+                                if (col.source === 'A') {
+                                    return rowA[col.index] || '';
+                                } else {
+                                    return '';
+                                }
+                            });
+                        result.push(outputRow);
+                    }
+                }
+            }
+
+            // Right Join
+            if (joinType === 'right') {
+                const mapA = new Map();
+                for (let i = 1; i < dataA.length; i++) {
+                    const key = dataA[i][keyA];
+                    if (!mapA.has(key)) {
+                        mapA.set(key, []);
+                    }
+                    mapA.get(key).push(dataA[i]);
+                }
+
+                for (let i = 1; i < dataB.length; i++) {
+                    const rowB = dataB[i];
+                    const key = rowB[keyB];
+                    const rowsA = mapA.get(key) || [];
+
+                    if (rowsA.length > 0) {
+                        rowsA.forEach(rowA => {
+                            const outputRow = setting.columns
+                                .filter(col => col.selected)
+                                .map(col => {
+                                    if (col.source === 'A') {
+                                        return rowA[col.index] || '';
+                                    } else {
+                                        return rowB[col.index] || '';
+                                    }
+                                });
+                            result.push(outputRow);
+                        });
+                    } else {
+                        const outputRow = setting.columns
+                            .filter(col => col.selected)
+                            .map(col => {
+                                if (col.source === 'B') {
+                                    return rowB[col.index] || '';
+                                } else {
+                                    return '';
+                                }
+                            });
+                        result.push(outputRow);
+                    }
+                }
+            }
+
+            // Outer Join
+            if (joinType === 'outer') {
+                for (let i = 1; i < dataB.length; i++) {
+                    const rowB = dataB[i];
+                    const key = rowB[keyB];
+
+                    if (matchedKeysB.has(key)) {
+                        continue;
+                    }
+
+                    const outputRow = setting.columns
+                        .filter(col => col.selected)
+                        .map(col => {
+                            if (col.source === 'B') {
+                                return rowB[col.index] || '';
+                            } else {
+                                return '';
+                            }
+                        });
+                    result.push(outputRow);
+                }
+            }
+
+            // 変換ルール適用
+            applyConversionRules(result, setting.rules);
+
+            // 重複行除去
+            let removedCount = 0;
+            if (setting.validation.removeDuplicates) {
+                const beforeCount = result.length - 1;
+                result.splice(1, result.length - 1, ...removeDuplicates(result.slice(1)));
+                removedCount = beforeCount - (result.length - 1);
+            }
+
+            resultCsvData = result;
+
+            // テスト実行結果の表示
+            displayDefineTestResult(result, removedCount);
+        }
+
+        function displayDefineTestResult(data, removedCount) {
+            const summary = document.getElementById('define-test-result-summary');
+            summary.innerHTML = `
+                <div class="result-summary-item"><strong>出力行数:</strong> ${data.length - 1}行</div>
+                <div class="result-summary-item"><strong>出力カラム数:</strong> ${data[0].length}列</div>
+                ${removedCount > 0 ? `<div class="result-summary-item"><strong>重複除去:</strong> ${removedCount}行</div>` : ''}
+            `;
+
+            const preview = document.getElementById('define-test-result-preview');
+            preview.innerHTML = '<strong>先頭20行のプレビュー:</strong>' + createPreviewTable(data.slice(0, 21));
+
+            document.getElementById('define-test-result-section').style.display = 'block';
+
+            // スムーズにスクロール
+            document.getElementById('define-test-result-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        document.getElementById('define-test-download').addEventListener('click', () => {
+            if (!resultCsvData) return;
+            const timestamp = formatDateTime(new Date());
+            downloadCSV(resultCsvData, `test_result_${timestamp}.csv`);
+        });
+
+        // 実行モード
+        function loadSettingsDropdown(mode) {
+            const settings = JSON.parse(localStorage.getItem('csvSettings') || '[]');
+            const select = document.getElementById(`${mode}-setting`);
+
+            select.innerHTML = '<option value="">設定を選択してください</option>';
+            settings.forEach((setting, idx) => {
+                const option = document.createElement('option');
+                option.value = idx;
+                option.textContent = setting.name;
+                select.appendChild(option);
+            });
+        }
+
+        document.getElementById('execute-setting').addEventListener('change', (e) => {
+            const idx = e.target.value;
+            if (idx === '') {
+                document.getElementById('execute-file-section').style.display = 'none';
+                document.getElementById('execute-summary').style.display = 'none';
+                return;
+            }
+
+            const settings = JSON.parse(localStorage.getItem('csvSettings') || '[]');
+            const setting = settings[idx];
+
+            // サマリー表示
+            const joinTypeNames = {
+                'inner': '両方に一致する行だけ出力',
+                'left': 'Aを基準にBを補完',
+                'right': 'Bを基準にAを補完',
+                'outer': 'すべての行を出力（全結合）'
+            };
+
+            document.getElementById('execute-summary').innerHTML = `
+                <div class="summary-item"><strong>設定名:</strong> ${setting.name}</div>
+                <div class="summary-item"><strong>結合方法:</strong> ${joinTypeNames[setting.joinType]}</div>
+                <div class="summary-item"><strong>結合キー:</strong> A: ${setting.columns.find(c => c.source === 'A' && c.index == setting.keyA)?.original || ''} / B: ${setting.columns.find(c => c.source === 'B' && c.index == setting.keyB)?.original || ''}</div>
+                <div class="summary-item"><strong>出力カラム数:</strong> ${setting.columns.filter(c => c.selected).length}</div>
+            `;
+            document.getElementById('execute-summary').style.display = 'block';
+            document.getElementById('execute-file-section').style.display = 'block';
+            document.getElementById('execute-result-section').style.display = 'none';
+        });
+
+        document.getElementById('execute-file-a').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                executeFileA = file;
+                document.getElementById('execute-file-a-name').textContent = file.name;
+            }
+        });
+
+        document.getElementById('execute-file-b').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                executeFileB = file;
+                document.getElementById('execute-file-b-name').textContent = file.name;
+            }
+        });
+
+        // 実行モード: ドラッグ&ドロップセットアップ
+        setupFileDrop('execute-drop-zone-a', 'execute-file-a', 'execute-file-a-name', (file) => {
+            executeFileA = file;
+        });
+        setupFileDrop('execute-drop-zone-b', 'execute-file-b', 'execute-file-b-name', (file) => {
+            executeFileB = file;
+        });
+
+        document.getElementById('execute-run').addEventListener('click', async () => {
+            const settingIdx = document.getElementById('execute-setting').value;
+            if (settingIdx === '') {
+                alert('設定を選択してください');
+                return;
+            }
+
+            if (!executeFileA || !executeFileB) {
+                alert('両方のCSVファイルを選択してください');
+                return;
+            }
+
+            const settings = JSON.parse(localStorage.getItem('csvSettings') || '[]');
+            const setting = settings[settingIdx];
+
+            const textA = await readFile(executeFileA);
+            const textB = await readFile(executeFileB);
+            const dataA = parseCSV(textA);
+            const dataB = parseCSV(textB);
+
+            // 最後の実行情報を保存（ワンクリック実行用）
+            lastExecutionData = {
+                setting: setting,
+                fileA: executeFileA,
+                fileB: executeFileB,
+                fileNameA: executeFileA.name,
+                fileNameB: executeFileB.name,
+                dataA: dataA,
+                dataB: dataB
+            };
+
+            performJoin(dataA, dataB, setting, false, executeFileA.name, executeFileB.name);
+        });
+
+        function performJoin(dataA, dataB, setting, autoDownload = false, fileNameA = '', fileNameB = '') {
+            const warnings = validateData(dataA, dataB, setting);
+
+            if (warnings.length > 0) {
+                showWarningModal(warnings, () => {
+                    executeJoin(dataA, dataB, setting, autoDownload, fileNameA, fileNameB);
+                });
+            } else {
+                executeJoin(dataA, dataB, setting, autoDownload, fileNameA, fileNameB);
+            }
+        }
+
+        function validateData(dataA, dataB, setting) {
+            const warnings = [];
+
+            if (setting.validation.checkBlank) {
+                let blankCountA = 0;
+                let blankCountB = 0;
+
+                for (let i = 1; i < dataA.length; i++) {
+                    if (!dataA[i][setting.keyA] || dataA[i][setting.keyA].trim() === '') {
+                        blankCountA++;
+                    }
+                }
+
+                for (let i = 1; i < dataB.length; i++) {
+                    if (!dataB[i][setting.keyB] || dataB[i][setting.keyB].trim() === '') {
+                        blankCountB++;
+                    }
+                }
+
+                if (blankCountA > 0) {
+                    warnings.push(`CSV Aの結合キーに空白が${blankCountA}件あります`);
+                }
+                if (blankCountB > 0) {
+                    warnings.push(`CSV Bの結合キーに空白が${blankCountB}件あります`);
+                }
+            }
+
+            if (setting.validation.checkDuplicate) {
+                const keysA = new Set();
+                let dupCountA = 0;
+                for (let i = 1; i < dataA.length; i++) {
+                    const key = dataA[i][setting.keyA];
+                    if (keysA.has(key)) {
+                        dupCountA++;
+                    }
+                    keysA.add(key);
+                }
+
+                const keysB = new Set();
+                let dupCountB = 0;
+                for (let i = 1; i < dataB.length; i++) {
+                    const key = dataB[i][setting.keyB];
+                    if (keysB.has(key)) {
+                        dupCountB++;
+                    }
+                    keysB.add(key);
+                }
+
+                if (dupCountA > 0) {
+                    warnings.push(`CSV Aの結合キーに重複が${dupCountA}件あります`);
+                }
+                if (dupCountB > 0) {
+                    warnings.push(`CSV Bの結合キーに重複が${dupCountB}件あります`);
+                }
+            }
+
+            if (setting.validation.checkColumnCount) {
+                const colCountA = dataA[0].length;
+                const colCountB = dataB[0].length;
+
+                let mismatchA = 0;
+                for (let i = 1; i < dataA.length; i++) {
+                    if (dataA[i].length !== colCountA) {
+                        mismatchA++;
+                    }
+                }
+
+                let mismatchB = 0;
+                for (let i = 1; i < dataB.length; i++) {
+                    if (dataB[i].length !== colCountB) {
+                        mismatchB++;
+                    }
+                }
+
+                if (mismatchA > 0) {
+                    warnings.push(`CSV Aにカラム数不一致の行が${mismatchA}件あります`);
+                }
+                if (mismatchB > 0) {
+                    warnings.push(`CSV Bにカラム数不一致の行が${mismatchB}件あります`);
+                }
+            }
+
+            return warnings;
+        }
+
+        function showWarningModal(warnings, onProceed) {
+            const modal = document.getElementById('warning-modal');
+            const body = document.getElementById('warning-modal-body');
+
+            body.innerHTML = '<ul>' + warnings.map(w => `<li>${w}</li>`).join('') + '</ul>';
+            modal.classList.add('show');
+
+            const handleCancel = () => {
+                modal.classList.remove('show');
+                cleanup();
+            };
+
+            const handleProceed = () => {
+                modal.classList.remove('show');
+                onProceed();
+                cleanup();
+            };
+
+            const cleanup = () => {
+                document.getElementById('warning-cancel').removeEventListener('click', handleCancel);
+                document.getElementById('warning-proceed').removeEventListener('click', handleProceed);
+            };
+
+            document.getElementById('warning-cancel').addEventListener('click', handleCancel);
+            document.getElementById('warning-proceed').addEventListener('click', handleProceed);
+        }
+
+        function executeJoin(dataA, dataB, setting, autoDownload = false, fileNameA = '', fileNameB = '') {
+            const headersA = dataA[0];
+            const headersB = dataB[0];
+            const keyA = parseInt(setting.keyA);
+            const keyB = parseInt(setting.keyB);
+            const joinType = setting.joinType;
+
+            // データをマップに変換
+            const mapB = new Map();
+            for (let i = 1; i < dataB.length; i++) {
+                const key = dataB[i][keyB];
+                if (!mapB.has(key)) {
+                    mapB.set(key, []);
+                }
+                mapB.get(key).push(dataB[i]);
+            }
+
+            const result = [];
+            const matchedKeysB = new Set();
+
+            // 出力ヘッダー
+            const outputHeaders = setting.columns
+                .filter(col => col.selected)
+                .map(col => col.name);
+            result.push(outputHeaders);
+
+            // Inner/Left/Outer Join
+            if (joinType === 'inner' || joinType === 'left' || joinType === 'outer') {
+                for (let i = 1; i < dataA.length; i++) {
+                    const rowA = dataA[i];
+                    const key = rowA[keyA];
+                    const rowsB = mapB.get(key) || [];
+
+                    if (rowsB.length > 0) {
+                        rowsB.forEach(rowB => {
+                            const outputRow = setting.columns
+                                .filter(col => col.selected)
+                                .map(col => {
+                                    if (col.source === 'A') {
+                                        return rowA[col.index] || '';
+                                    } else {
+                                        return rowB[col.index] || '';
+                                    }
+                                });
+                            result.push(outputRow);
+                        });
+                        matchedKeysB.add(key);
+                    } else if (joinType === 'left' || joinType === 'outer') {
+                        const outputRow = setting.columns
+                            .filter(col => col.selected)
+                            .map(col => {
+                                if (col.source === 'A') {
+                                    return rowA[col.index] || '';
+                                } else {
+                                    return '';
+                                }
+                            });
+                        result.push(outputRow);
+                    }
+                }
+            }
+
+            // Right Join
+            if (joinType === 'right') {
+                // A側をマップに変換
+                const mapA = new Map();
+                for (let i = 1; i < dataA.length; i++) {
+                    const key = dataA[i][keyA];
+                    if (!mapA.has(key)) {
+                        mapA.set(key, []);
+                    }
+                    mapA.get(key).push(dataA[i]);
+                }
+
+                for (let i = 1; i < dataB.length; i++) {
+                    const rowB = dataB[i];
+                    const key = rowB[keyB];
+                    const rowsA = mapA.get(key) || [];
+
+                    if (rowsA.length > 0) {
+                        // マッチする場合、A側とB側を結合
+                        rowsA.forEach(rowA => {
+                            const outputRow = setting.columns
+                                .filter(col => col.selected)
+                                .map(col => {
+                                    if (col.source === 'A') {
+                                        return rowA[col.index] || '';
+                                    } else {
+                                        return rowB[col.index] || '';
+                                    }
+                                });
+                            result.push(outputRow);
+                        });
+                    } else {
+                        // マッチしない場合、B側のみ出力
+                        const outputRow = setting.columns
+                            .filter(col => col.selected)
+                            .map(col => {
+                                if (col.source === 'B') {
+                                    return rowB[col.index] || '';
+                                } else {
+                                    return '';
+                                }
+                            });
+                        result.push(outputRow);
+                    }
+                }
+            }
+
+            // Outer Join
+            if (joinType === 'outer') {
+                for (let i = 1; i < dataB.length; i++) {
+                    const rowB = dataB[i];
+                    const key = rowB[keyB];
+
+                    if (matchedKeysB.has(key)) {
+                        continue;
+                    }
+
+                    const outputRow = setting.columns
+                        .filter(col => col.selected)
+                        .map(col => {
+                            if (col.source === 'B') {
+                                return rowB[col.index] || '';
+                            } else {
+                                return '';
+                            }
+                        });
+                    result.push(outputRow);
+                }
+            }
+
+            // 変換ルール適用
+            applyConversionRules(result, setting.rules);
+
+            // 重複行除去
+            let removedCount = 0;
+            if (setting.validation.removeDuplicates) {
+                const beforeCount = result.length - 1;
+                result.splice(1, result.length - 1, ...removeDuplicates(result.slice(1)));
+                removedCount = beforeCount - (result.length - 1);
+            }
+
+            resultCsvData = result;
+
+            // 実行ログ保存
+            saveExecutionLog(setting.name, fileNameA, fileNameB, result.length - 1, validateData(dataA, dataB, setting).length > 0, removedCount);
+
+            if (autoDownload) {
+                const baseName = setting.name || 'output';
+                const timestamp = formatDateTime(new Date());
+                downloadCSV(result, `${baseName}_${timestamp}.csv`);
+            } else {
+                displayResult(result, removedCount);
+            }
+        }
+
+        function applyConversionRules(data, rules) {
+            if (!rules || rules.length === 0) return;
+
+            const headers = data[0];
+            const columnIndices = {};
+            headers.forEach((header, idx) => {
+                columnIndices[header] = idx;
+            });
+
+            rules.forEach(rule => {
+                if (!rule.column || !rule.from || rule.to === undefined) return;
+
+                const colIdx = columnIndices[rule.column];
+                if (colIdx === undefined) return;
+
+                for (let i = 1; i < data.length; i++) {
+                    if (data[i][colIdx] === rule.from) {
+                        data[i][colIdx] = rule.to;
+                    }
+                }
+            });
+        }
+
+        function removeDuplicates(rows) {
+            const seen = new Set();
+            const unique = [];
+
+            rows.forEach(row => {
+                const key = row.join('|');
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    unique.push(row);
+                }
+            });
+
+            return unique;
+        }
+
+        function displayResult(data, removedCount) {
+            const summary = document.getElementById('execute-result-summary');
+            summary.innerHTML = `
+                <div class="result-summary-item"><strong>出力行数:</strong> ${data.length - 1}行</div>
+                <div class="result-summary-item"><strong>出力カラム数:</strong> ${data[0].length}列</div>
+                ${removedCount > 0 ? `<div class="result-summary-item"><strong>重複除去:</strong> ${removedCount}行</div>` : ''}
+            `;
+
+            const preview = document.getElementById('execute-result-preview');
+            preview.innerHTML = '<strong>先頭20行のプレビュー:</strong>' + createPreviewTable(data.slice(0, 21));
+
+            document.getElementById('execute-result-section').style.display = 'block';
+        }
+
+        document.getElementById('execute-download').addEventListener('click', () => {
+            if (!resultCsvData) return;
+            const timestamp = formatDateTime(new Date());
+            downloadCSV(resultCsvData, `result_${timestamp}.csv`);
+        });
+
+        // ワンクリック実行モード
+        // ワンクリック実行モード: 表示更新
+        function loadOneclickMode() {
+            if (!lastExecutionData) {
+                document.getElementById('oneclick-no-data').style.display = 'block';
+                document.getElementById('oneclick-with-data').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('oneclick-no-data').style.display = 'none';
+            document.getElementById('oneclick-with-data').style.display = 'block';
+
+            const joinTypeNames = {
+                'inner': '両方に一致する行だけ出力',
+                'left': 'Aを基準にBを補完',
+                'right': 'Bを基準にAを補完',
+                'outer': 'すべての行を出力（全結合）'
+            };
+
+            document.getElementById('oneclick-info').innerHTML = `
+                <div class="summary-item"><strong>設定名:</strong> ${lastExecutionData.setting.name}</div>
+                <div class="summary-item"><strong>結合方法:</strong> ${joinTypeNames[lastExecutionData.setting.joinType]}</div>
+                <div class="summary-item"><strong>ファイルA:</strong> ${lastExecutionData.fileNameA}</div>
+                <div class="summary-item"><strong>ファイルB:</strong> ${lastExecutionData.fileNameB}</div>
+                <div class="summary-item"><strong>出力カラム数:</strong> ${lastExecutionData.setting.columns.filter(c => c.selected).length}列</div>
+            `;
+        }
+
+        // ワンクリック実行モード: 実行ボタン
+        document.getElementById('oneclick-run').addEventListener('click', async () => {
+            if (!lastExecutionData) {
+                alert('実行モードで一度実行してください');
+                return;
+            }
+
+            // 最後の実行と同じ設定・データで再実行
+            performJoin(
+                lastExecutionData.dataA,
+                lastExecutionData.dataB,
+                lastExecutionData.setting,
+                true,  // 自動ダウンロード
+                lastExecutionData.fileNameA,
+                lastExecutionData.fileNameB
+            );
+        });
+
+        // 列整形モード
+        document.getElementById('format-file').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            document.getElementById('format-file-name').textContent = file.name;
+            const text = await readFile(file);
+            formatCsvData = parseCSV(text);
+
+            if (formatCsvData.length === 0) return;
+
+            formatColumns = formatCsvData[0].map((name, index) => ({
+                original: name,
+                name: name,
+                index: index,
+                selected: true
+            }));
+
+            renderFormatColumns();
+            document.getElementById('format-columns-section').style.display = 'block';
+        });
+
+        // 列整形モード: ドラッグ&ドロップセットアップ
+        setupFileDrop('format-drop-zone', 'format-file', 'format-file-name', async (file, text) => {
+            formatCsvData = parseCSV(text);
+            if (formatCsvData.length === 0) return;
+
+            formatColumns = formatCsvData[0].map((name, index) => ({
+                original: name,
+                name: name,
+                index: index,
+                selected: true
+            }));
+
+            renderFormatColumns();
+            document.getElementById('format-columns-section').style.display = 'block';
+        });
+
+        function renderFormatColumns() {
+            const container = document.getElementById('format-columns');
+            container.innerHTML = '';
+
+            formatColumns.forEach((col, idx) => {
+                const div = document.createElement('div');
+                div.className = 'column-item';
+                div.draggable = true;
+                div.dataset.index = idx;
+
+                div.innerHTML = `
+                    <span class="drag-handle">☰</span>
+                    <input type="checkbox" class="column-checkbox" ${col.selected ? 'checked' : ''}>
+                    <span class="column-name">${col.original}</span>
+                    <input type="text" class="column-rename" value="${col.name}" placeholder="リネーム">
+                `;
+
+                div.querySelector('.column-checkbox').addEventListener('change', (e) => {
+                    formatColumns[idx].selected = e.target.checked;
+                });
+
+                div.querySelector('.column-rename').addEventListener('input', (e) => {
+                    formatColumns[idx].name = e.target.value || col.original;
+                });
+
+                div.addEventListener('dragstart', handleFormatDragStart);
+                div.addEventListener('dragover', handleFormatDragOver);
+                div.addEventListener('drop', handleFormatDrop);
+                div.addEventListener('dragend', handleFormatDragEnd);
+
+                container.appendChild(div);
+            });
+        }
+
+        let formatDraggedElement = null;
+
+        function handleFormatDragStart(e) {
+            formatDraggedElement = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleFormatDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+
+            const items = Array.from(document.querySelectorAll('#format-columns .column-item'));
+            items.forEach(item => item.classList.remove('drag-over'));
+
+            if (this !== formatDraggedElement) {
+                this.classList.add('drag-over');
+            }
+
+            return false;
+        }
+
+        function handleFormatDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+
+            if (formatDraggedElement !== this) {
+                const fromIndex = parseInt(formatDraggedElement.dataset.index);
+                const toIndex = parseInt(this.dataset.index);
+
+                const item = formatColumns.splice(fromIndex, 1)[0];
+                formatColumns.splice(toIndex, 0, item);
+
+                renderFormatColumns();
+            }
+
+            return false;
+        }
+
+        function handleFormatDragEnd(e) {
+            this.classList.remove('dragging');
+            document.querySelectorAll('#format-columns .column-item').forEach(item => {
+                item.classList.remove('drag-over');
+            });
+        }
+
+        document.getElementById('format-save-setting').addEventListener('click', () => {
+            const name = document.getElementById('format-setting-name').value.trim();
+            if (!name) {
+                alert('設定名を入力してください');
+                return;
+            }
+
+            const setting = {
+                name,
+                columns: formatColumns
+            };
+
+            const settings = JSON.parse(localStorage.getItem('formatSettings') || '[]');
+            const existingIndex = settings.findIndex(s => s.name === name);
+
+            if (existingIndex >= 0) {
+                if (!confirm('同名の設定が存在します。上書きしますか？')) return;
+                settings[existingIndex] = setting;
+            } else {
+                settings.push(setting);
+            }
+
+            localStorage.setItem('formatSettings', JSON.stringify(settings));
+            alert('設定を保存しました');
+            loadFormatSettings();
+        });
+
+        function loadFormatSettings() {
+            const settings = JSON.parse(localStorage.getItem('formatSettings') || '[]');
+            const container = document.getElementById('format-saved-settings');
+
+            if (settings.length === 0) {
+                document.getElementById('format-saved-settings-section').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('format-saved-settings-section').style.display = 'block';
+            container.innerHTML = '';
+
+            settings.forEach((setting, idx) => {
+                const div = document.createElement('div');
+                div.className = 'settings-item';
+
+                div.innerHTML = `
+                    <span class="settings-name">${setting.name}</span>
+                    <div class="button-group">
+                        <button class="btn btn-primary btn-sm settings-load">読込</button>
+                        <button class="btn btn-danger btn-sm settings-delete">削除</button>
+                    </div>
+                `;
+
+                div.querySelector('.settings-load').addEventListener('click', () => {
+                    if (formatCsvData) {
+                        formatColumns = setting.columns;
+                        renderFormatColumns();
+                        alert('設定を読み込みました');
+                    } else {
+                        alert('設定を読み込むには、まずCSVファイルをアップロードしてください');
+                    }
+                });
+
+                div.querySelector('.settings-delete').addEventListener('click', () => {
+                    if (confirm(`設定「${setting.name}」を削除しますか？`)) {
+                        settings.splice(idx, 1);
+                        localStorage.setItem('formatSettings', JSON.stringify(settings));
+                        loadFormatSettings();
+                    }
+                });
+
+                container.appendChild(div);
+            });
+        }
+
+        document.getElementById('format-export-setting').addEventListener('click', () => {
+            const name = document.getElementById('format-setting-name').value.trim();
+            if (!name) {
+                alert('設定名を入力してください');
+                return;
+            }
+
+            const setting = {
+                name,
+                columns: formatColumns
+            };
+
+            const json = JSON.stringify(setting, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${name}.json`;
+            link.click();
+        });
+
+        document.getElementById('format-import-setting').addEventListener('click', () => {
+            document.getElementById('format-import-file').click();
+        });
+
+        document.getElementById('format-import-file').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            try {
+                const text = await readFile(file);
+                const setting = JSON.parse(text);
+
+                const settings = JSON.parse(localStorage.getItem('formatSettings') || '[]');
+                const existingIndex = settings.findIndex(s => s.name === setting.name);
+
+                if (existingIndex >= 0) {
+                    if (!confirm('同名の設定が存在します。上書きしますか？')) return;
+                    settings[existingIndex] = setting;
+                } else {
+                    settings.push(setting);
+                }
+
+                localStorage.setItem('formatSettings', JSON.stringify(settings));
+                alert('設定をインポートしました');
+                loadFormatSettings();
+            } catch (err) {
+                alert('設定ファイルの読み込みに失敗しました');
+            }
+
+            e.target.value = '';
+        });
+
+        document.getElementById('format-run').addEventListener('click', () => {
+            if (!formatCsvData) {
+                alert('CSVファイルを選択してください');
+                return;
+            }
+
+            const result = [
+                formatColumns.filter(col => col.selected).map(col => col.name)
+            ];
+
+            for (let i = 1; i < formatCsvData.length; i++) {
+                const row = formatColumns
+                    .filter(col => col.selected)
+                    .map(col => formatCsvData[i][col.index] || '');
+                result.push(row);
+            }
+
+            const originalFileName = document.getElementById('format-file-name').textContent;
+            const baseName = originalFileName.replace(/\.csv$/i, '');
+            const timestamp = formatDateTime(new Date());
+            downloadCSV(result, `${baseName}_整形済み_${timestamp}.csv`);
+        });
+
+        // 実行ログ
+        function saveExecutionLog(settingName, fileNameA, fileNameB, outputRows, hasWarnings, removedCount) {
+            const logs = JSON.parse(localStorage.getItem('executionLogs') || '[]');
+
+            const log = {
+                id: Date.now(),
+                date: new Date().toISOString(),
+                settingName,
+                fileNameA,
+                fileNameB,
+                outputRows,
+                hasWarnings,
+                removedCount
+            };
+
+            logs.unshift(log);
+
+            if (logs.length > 100) {
+                logs.splice(100);
+            }
+
+            localStorage.setItem('executionLogs', JSON.stringify(logs));
+        }
+
+        function loadExecutionLog() {
+            const logs = JSON.parse(localStorage.getItem('executionLogs') || '[]');
+            const container = document.getElementById('log-list');
+
+            if (logs.length === 0) {
+                container.innerHTML = '<p style="color: #6c757d;">実行履歴がありません</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+
+            logs.forEach((log, idx) => {
+                const div = document.createElement('div');
+                div.className = 'log-item';
+
+                const date = new Date(log.date);
+                const dateStr = `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+
+                div.innerHTML = `
+                    <div class="log-header">
+                        <div>
+                            <span class="log-title">${log.settingName}</span>
+                            ${log.hasWarnings ? '<span class="warning-badge">警告あり</span>' : ''}
+                        </div>
+                        <span class="log-date">${dateStr}</span>
+                    </div>
+                    <div class="log-details">
+                        <div class="log-detail-item"><strong>ファイルA:</strong> ${log.fileNameA}</div>
+                        <div class="log-detail-item"><strong>ファイルB:</strong> ${log.fileNameB}</div>
+                        <div class="log-detail-item"><strong>出力行数:</strong> ${log.outputRows}行</div>
+                        ${log.removedCount > 0 ? `<div class="log-detail-item"><strong>重複除去:</strong> ${log.removedCount}行</div>` : ''}
+                    </div>
+                `;
+
+                div.querySelector('.log-header').addEventListener('click', () => {
+                    const details = div.querySelector('.log-details');
+                    details.classList.toggle('show');
+                });
+
+                container.appendChild(div);
+            });
+        }
+
+        document.getElementById('log-clear-all').addEventListener('click', () => {
+            if (confirm('すべての実行ログを削除しますか？')) {
+                localStorage.removeItem('executionLogs');
+                loadExecutionLog();
+            }
+        });
+
+        // 初期化
+        loadSavedSettings();
+    </script>
+</body>
+</html>
